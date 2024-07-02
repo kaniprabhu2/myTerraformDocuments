@@ -1,0 +1,67 @@
+# Configure the AWS provider
+provider "aws" {
+  region = "us-east-2"  # Replace with desired region
+}
+
+# Define variables
+variable "vpc_id" {
+  description = "VPC ID where the security group will be created"
+  type        = string
+  default     = "vpc-0d37bc6f8f285336f"  # Replace VPC ID
+}
+
+variable "security_group_name" {
+  description = "Name of the security group"
+  type        = string
+  default     = "jenkins"
+}
+
+variable "security_group_description" {
+  description = "Description of the security group"
+  type        = string
+  default     = "Security group for Jenkins application"
+}
+
+# Create the security group
+resource "aws_security_group" "jenkins_security_group" {
+  name        = var.security_group_name
+  description = var.security_group_description
+  vpc_id      = var.vpc_id
+
+  // Inbound rule: allow port 8080 for Jenkins
+  ingress {
+    description = "Allow Jenkins inbound traffic"
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  // Inbound rule: allow port 22 for SSH
+  ingress {
+    description = "Allow SSH inbound traffic"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  // Outbound rule: allow all outbound traffic
+  egress {
+    description = "Allow all outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = var.security_group_name
+  }
+}
+
+# Output the security group ID
+output "security_group_id" {
+  description = "The ID of the created security group"
+  value       = aws_security_group.jenkins_security_group.id
+}
